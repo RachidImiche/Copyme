@@ -116,7 +116,7 @@ body {
   background-color: var(--item-active);
 }
 
-.clipboard-item:hover {
+body:not(.is-keyboard-navigating) .clipboard-item:hover {
   background-color: var(--item-hover);
 }
 
@@ -137,7 +137,8 @@ body {
   transition: opacity 0.2s ease;
 }
 
-.clipboard-item:hover .item-actions {
+body:not(.is-keyboard-navigating) .clipboard-item:hover .item-actions,
+.clipboard-item.focused .item-actions {
   opacity: 1;
 }
 

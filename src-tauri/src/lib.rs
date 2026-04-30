@@ -71,8 +71,13 @@ pub fn run() {
             clipboard::start_listener(app.handle().clone());
             window::setup_shortcuts(app);
             
+            // Enable auto-start
+            use tauri_plugin_autostart::ManagerExt;
+            let _ = app.autolaunch().enable();
+            
             Ok(())
         })
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--hidden"])))
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![get_history, toggle_pin, delete_item, paste_item, hide_window])
         .run(tauri::generate_context!())

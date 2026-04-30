@@ -33,7 +33,6 @@ function closePreview() {
 closePreviewBtn.onclick = closePreview;
 
 previewPasteBtn.onclick = () => {
-  closePreview();
   pasteItem(currentPreviewContent);
 };
 
@@ -135,7 +134,26 @@ searchInput.addEventListener('input', (e) => {
   }, 100);
 });
 
+function updateSelection() {
+  const items = clipboardList.children;
+  for (let i = 0; i < items.length; i++) {
+    if (i === selectedIndex) {
+      items[i].classList.add('focused');
+    } else {
+      items[i].classList.remove('focused');
+    }
+  }
+}
+
+window.addEventListener('mousemove', () => {
+  document.body.classList.remove('is-keyboard-navigating');
+});
+
 window.addEventListener('keydown', (e) => {
+  if (['ArrowUp', 'ArrowDown'].includes(e.key)) {
+    document.body.classList.add('is-keyboard-navigating');
+  }
+
   if (e.key === 'Escape') {
     if (previewPanel.classList.contains('open')) {
       closePreview();
@@ -146,14 +164,14 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (selectedIndex < historyItems.length - 1) {
       selectedIndex++;
-      renderHistory();
+      updateSelection();
       scrollToSelected();
     }
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
     if (selectedIndex > 0) {
       selectedIndex--;
-      renderHistory();
+      updateSelection();
       scrollToSelected();
     }
   } else if (e.key === 'Enter') {
@@ -178,6 +196,7 @@ window.addEventListener('blur', () => {
 
 // Auto-focus the search bar when the window appears
 window.addEventListener('focus', () => {
+  closePreview();
   searchInput.focus();
   searchInput.select();
   selectedIndex = -1;
