@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background Drop Shadow -->
+  <rect x="100" y="80" width="312" height="380" rx="40" fill="#0b0b0e" />
+  
+  <!-- Main Clipboard Body -->
+  <rect x="100" y="80" width="312" height="380" rx="40" fill="#19191c" stroke="#2a2a30" stroke-width="8" />
+  
+  <!-- Glowing Blue Accent / Paper -->
+  <rect x="140" y="140" width="232" height="280" rx="16" fill="#5e6ad2" opacity="0.15" />
+  
+  <!-- Lines on the paper -->
+  <line x1="180" y1="200" x2="332" y2="200" stroke="#5e6ad2" stroke-width="16" stroke-linecap="round" opacity="0.8" />
+  <line x1="180" y1="260" x2="332" y2="260" stroke="#5e6ad2" stroke-width="16" stroke-linecap="round" opacity="0.5" />
+  <line x1="180" y1="320" x2="280" y2="320" stroke="#5e6ad2" stroke-width="16" stroke-linecap="round" opacity="0.3" />
+  
+  <!-- Clipboard Clip Base -->
+  <rect x="176" y="50" width="160" height="60" rx="20" fill="#2a2a30" />
+  
+  <!-- Clip Accent -->
+  <rect x="216" y="40" width="80" height="24" rx="12" fill="#5e6ad2" />
+  <circle cx="256" cy="80" r="10" fill="#19191c" />
+</svg>
