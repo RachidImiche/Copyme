@@ -2,13 +2,26 @@
   <img src="app-icon.svg" width="128" height="128" alt="CopyMe Logo">
   <h1>CopyMe</h1>
   <p>A lightning-fast, highly aesthetic clipboard history manager built with Tauri 2.</p>
+
+  <br>
+
+  <a href="https://github.com/RachidImiche/Copyme/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-Download_Latest-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" />
+  </a>
+  <a href="https://github.com/RachidImiche/Copyme/releases/latest">
+    <img src="https://img.shields.io/badge/macOS-Download_Latest-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" />
+  </a>
+  <a href="https://github.com/RachidImiche/Copyme/releases/latest">
+    <img src="https://img.shields.io/badge/Linux-Download_Latest-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux" />
+  </a>
+
+  <br><br>
 </div>
 
 ---
 
 ## Overview
 
-[![Latest Release](https://img.shields.io/github/v/release/RachidImiche/Copyme?label=Latest%20Release&style=for-the-badge&color=5e6ad2)](https://github.com/RachidImiche/Copyme/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/RachidImiche/Copyme/release.yml?style=for-the-badge)](https://github.com/RachidImiche/Copyme/actions/workflows/release.yml)
 
 **CopyMe** is a lightweight, cross-platform clipboard history application designed to be a modern, drop-in replacement for native clipboard managers. Built with **Tauri 2**, **Rust**, and **Vanilla web technologies**, it offers a blazing-fast background listener, local SQLite persistence, and a nice UI.
