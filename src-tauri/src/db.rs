@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, Result};
+use rusqlite::{params, Connection, OptionalExtension, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -29,6 +29,11 @@ pub fn init_db(db_path: PathBuf) -> Result<Connection> {
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             pinned BOOLEAN DEFAULT 0
         )",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_clipboard_content_type
+         ON clipboard(content, content_type)",
         [],
     )?;
 
@@ -168,5 +173,46 @@ pub fn toggle_pin(conn: &Connection, id: i64) -> Result<()> {
 
 pub fn delete_item(conn: &Connection, id: i64) -> Result<()> {
     conn.execute("DELETE FROM clipboard WHERE id = ?1", params![id])?;
+    Ok(())
+}
+
+pub fn update_item_content(conn: &Connection, id: i64, new_content: &str) -> Result<()> {
+    let duplicate: Option<(i64, bool)> = conn
+        .query_row(
+            "SELECT id, pinned
+             FROM clipboard
+             WHERE content = ?1
+               AND id != ?2
+               AND content_type = 'text'
+             LIMIT 1",
+            params![new_content, id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?;
+
+    if let Some((duplicate_id, duplicate_pinned)) = duplicate {
+        if duplicate_pinned {
+            // Only update pin if current item isn't already pinned
+            let current_pinned: bool = conn.query_row(
+                "SELECT pinned FROM clipboard WHERE id = ?1",
+                params![id],
+                |row| row.get(0),
+            )?;
+
+            if !current_pinned {
+                conn.execute("UPDATE clipboard SET pinned = 1 WHERE id = ?1", params![id])?;
+            }
+        }
+
+        conn.execute("DELETE FROM clipboard WHERE id = ?1", params![duplicate_id])?;
+    }
+
+    conn.execute(
+        "UPDATE clipboard
+         SET content = ?1,
+             timestamp = datetime('now', 'localtime')
+         WHERE id = ?2",
+        params![new_content, id],
+    )?;
     Ok(())
 }

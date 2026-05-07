@@ -38,11 +38,24 @@
         <span>Preview</span>
       </div>
       <div class="preview-content">
-        <pre id="previewText"></pre>
+        <pre id="previewText" hidden></pre>
+        <textarea id="previewTextInput" class="preview-text-input" hidden placeholder="Edit your clipboard text..."></textarea>
         <img id="previewImage" alt="Clipboard image preview" hidden />
       </div>
       <div class="preview-footer">
+        <button id="previewSaveBtn" class="btn-secondary" hidden>Save</button>
         <button id="previewPasteBtn" class="btn-primary">Paste</button>
+      </div>
+    </div>
+
+    <div id="unsavedDialogBackdrop" class="dialog-backdrop" hidden>
+      <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="unsavedDialogTitle">
+        <h3 id="unsavedDialogTitle">Unsaved changes</h3>
+        <p>You have unsaved edits in this preview.</p>
+        <div class="dialog-actions">
+          <button id="unsavedCancelBtn" class="btn-secondary">Cancel</button>
+          <button id="unsavedOkBtn" class="btn-primary">OK</button>
+        </div>
       </div>
     </div>
   </div>

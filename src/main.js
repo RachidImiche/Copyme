@@ -8,14 +8,23 @@ let selectedIndex = -1;
 let historyItems = [];
 
 const previewPanel = document.getElementById("previewPanel");
+const previewContent = document.querySelector(".preview-content");
 const previewText = document.getElementById("previewText");
+const previewTextInput = document.getElementById("previewTextInput");
 const previewImage = document.getElementById("previewImage");
 const closePreviewBtn = document.getElementById("closePreviewBtn");
+const previewSaveBtn = document.getElementById("previewSaveBtn");
 const previewPasteBtn = document.getElementById("previewPasteBtn");
+const unsavedDialogBackdrop = document.getElementById("unsavedDialogBackdrop");
+const unsavedCancelBtn = document.getElementById("unsavedCancelBtn");
+const unsavedOkBtn = document.getElementById("unsavedOkBtn");
 const mainView = document.getElementById("mainView");
+
 let currentPreviewItemId = null;
 let previewRequestToken = 0;
 let isPasting = false;
+let isSavingPreview = false;
+let originalPreviewText = "";
 
 function setPasteUiState(active) {
   previewPasteBtn.disabled = active;
@@ -26,9 +35,147 @@ function getItemLabel(item) {
   if (item.content_type === "image") {
     return "Image";
   }
+
   return item.content.length > 150
     ? `${item.content.substring(0, 150)}...`
     : item.content;
+}
+
+function isTextPreviewActive() {
+  return previewPanel.classList.contains("open") && !previewTextInput.hidden;
+}
+
+function isUnsavedDialogOpen() {
+  return !unsavedDialogBackdrop.hidden;
+}
+
+function hasUnsavedPreviewChanges() {
+  return (
+    isTextPreviewActive() && previewTextInput.value !== originalPreviewText
+  );
+}
+
+function updatePreviewEditUi() {
+  const isEdited = hasUnsavedPreviewChanges();
+  previewSaveBtn.hidden = !isEdited;
+  previewTextInput.classList.toggle("edited", isEdited);
+}
+
+async function savePreviewText() {
+  if (
+    isSavingPreview ||
+    currentPreviewItemId === null ||
+    previewTextInput.hidden
+  ) {
+    return;
+  }
+
+  const nextText = previewTextInput.value;
+  if (nextText === originalPreviewText) {
+    updatePreviewEditUi();
+    return;
+  }
+
+  isSavingPreview = true;
+  previewSaveBtn.disabled = true;
+
+  try {
+    await invoke("update_text_content", {
+      id: currentPreviewItemId,
+      content: nextText,
+    });
+
+    // Update the item in-place instead of refetching everything
+    const item = historyItems.find((i) => i.id === currentPreviewItemId);
+    if (item) {
+      item.content = nextText;
+    }
+
+    originalPreviewText = nextText;
+    updatePreviewEditUi();
+    renderHistory(); // re-render with updated local state
+  } catch (error) {
+    console.error("Failed to save edited text:", error);
+  } finally {
+    isSavingPreview = false;
+    previewSaveBtn.disabled = false;
+  }
+}
+
+function promptDiscardUnsavedChanges() {
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      unsavedDialogBackdrop.hidden = true;
+      unsavedCancelBtn.removeEventListener("click", onCancel);
+      unsavedOkBtn.removeEventListener("click", onOk);
+      unsavedDialogBackdrop.removeEventListener("click", onBackdrop);
+      window.removeEventListener("keydown", onKeydown, true);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const onOk = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onBackdrop = (event) => {
+      if (event.target === unsavedDialogBackdrop) {
+        onCancel();
+      }
+    };
+
+    const onKeydown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        onOk();
+      }
+    };
+
+    unsavedDialogBackdrop.hidden = false;
+    unsavedCancelBtn.addEventListener("click", onCancel);
+    unsavedOkBtn.addEventListener("click", onOk);
+    unsavedDialogBackdrop.addEventListener("click", onBackdrop);
+    window.addEventListener("keydown", onKeydown, true);
+    unsavedCancelBtn.focus();
+  });
+}
+
+async function closePreview(force = false) {
+  if (!force && hasUnsavedPreviewChanges()) {
+    const shouldDiscard = await promptDiscardUnsavedChanges();
+    if (!shouldDiscard) {
+      return false;
+    }
+  }
+
+  previewRequestToken += 1;
+  previewPanel.classList.remove("open");
+  mainView.classList.remove("slide-out");
+
+  previewImage.removeAttribute("src");
+  previewText.textContent = "";
+  previewText.hidden = true;
+
+  previewTextInput.value = "";
+  previewTextInput.hidden = true;
+  previewTextInput.classList.remove("edited");
+
+  previewContent.classList.remove("text-mode");
+  previewContent.classList.add("image-mode");
+
+  previewSaveBtn.hidden = true;
+  previewSaveBtn.disabled = false;
+
+  currentPreviewItemId = null;
+  originalPreviewText = "";
+  return true;
 }
 
 async function openPreview(item) {
@@ -37,15 +184,36 @@ async function openPreview(item) {
 
   previewText.hidden = true;
   previewImage.hidden = true;
+  previewTextInput.hidden = true;
+
   previewText.textContent = "";
+  previewTextInput.value = "";
   previewImage.removeAttribute("src");
 
+  previewSaveBtn.hidden = true;
+  previewSaveBtn.disabled = false;
+  previewTextInput.classList.remove("edited");
+  originalPreviewText = "";
+  previewContent.classList.remove("text-mode", "image-mode");
+
   if (item.content_type === "image") {
+    previewContent.classList.add("image-mode");
     previewText.hidden = false;
     previewText.textContent = "Loading image preview...";
   } else {
-    previewText.hidden = false;
-    previewText.textContent = item.content;
+    previewContent.classList.add("text-mode");
+    previewTextInput.hidden = false;
+    previewTextInput.value = item.content;
+    originalPreviewText = item.content;
+    updatePreviewEditUi();
+
+    setTimeout(() => {
+      previewTextInput.focus();
+      previewTextInput.setSelectionRange(
+        previewTextInput.value.length,
+        previewTextInput.value.length,
+      );
+    }, 0);
   }
 
   previewPanel.classList.add("open");
@@ -60,6 +228,7 @@ async function openPreview(item) {
       ) {
         return;
       }
+
       previewImage.src = imageDataUrl;
       previewImage.hidden = false;
       previewText.hidden = true;
@@ -70,6 +239,7 @@ async function openPreview(item) {
       ) {
         return;
       }
+
       previewImage.hidden = true;
       previewText.hidden = false;
       previewText.textContent = "Failed to load image preview.";
@@ -78,22 +248,23 @@ async function openPreview(item) {
   }
 }
 
-function closePreview() {
-  previewRequestToken += 1;
-  previewPanel.classList.remove("open");
-  mainView.classList.remove("slide-out");
-  previewImage.removeAttribute("src");
-  previewText.textContent = "";
-  currentPreviewItemId = null;
-}
-
-closePreviewBtn.onclick = closePreview;
+closePreviewBtn.onclick = async () => {
+  await closePreview();
+};
 
 previewPasteBtn.onclick = () => {
   if (currentPreviewItemId !== null) {
     pasteItem(currentPreviewItemId);
   }
 };
+
+previewSaveBtn.onclick = () => {
+  savePreviewText();
+};
+
+previewTextInput.addEventListener("input", () => {
+  updatePreviewEditUi();
+});
 
 async function fetchHistory() {
   try {
@@ -188,8 +359,8 @@ async function togglePin(id) {
   try {
     await invoke("toggle_pin", { id });
     fetchHistory();
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -197,8 +368,8 @@ async function deleteItem(id) {
   try {
     await invoke("delete_item", { id });
     fetchHistory();
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -223,10 +394,10 @@ async function pasteItem(id) {
 }
 
 let searchTimeout;
-searchInput.addEventListener("input", (e) => {
+searchInput.addEventListener("input", (event) => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    currentSearch = e.target.value;
+    currentSearch = event.target.value;
     selectedIndex = -1;
     fetchHistory();
   }, 100);
@@ -234,9 +405,9 @@ searchInput.addEventListener("input", (e) => {
 
 function updateSelection() {
   const items = clipboardList.children;
-  for (let i = 0; i < items.length; i += 1) {
-    const item = items[i];
-    const shouldFocus = i === selectedIndex;
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
+    const shouldFocus = index === selectedIndex;
     item.classList.toggle("focused", shouldFocus);
     item.classList.toggle(
       "mouse-active",
@@ -251,33 +422,53 @@ clipboardList.addEventListener("mouseleave", () => {
   updateSelection();
 });
 
-window.addEventListener("keydown", (e) => {
-  if (["ArrowUp", "ArrowDown"].includes(e.key)) {
-    document.body.classList.add("is-keyboard-navigating");
+window.addEventListener("keydown", async (event) => {
+  if (isUnsavedDialogOpen()) {
+    return;
   }
 
-  if (e.key === "Escape") {
+  const isSaveShortcut =
+    event.key.toLowerCase() === "s" && (event.ctrlKey || event.metaKey);
+  if (isSaveShortcut && isTextPreviewActive()) {
+    event.preventDefault();
+    savePreviewText();
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
     if (previewPanel.classList.contains("open")) {
-      closePreview();
+      await closePreview();
     } else {
       invoke("hide_window");
     }
-  } else if (e.key === "ArrowDown") {
-    e.preventDefault();
+    return;
+  }
+
+  if (previewPanel.classList.contains("open")) {
+    return;
+  }
+
+  if (["ArrowUp", "ArrowDown"].includes(event.key)) {
+    document.body.classList.add("is-keyboard-navigating");
+  }
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
     if (selectedIndex < historyItems.length - 1) {
       selectedIndex += 1;
       updateSelection();
       scrollToSelected();
     }
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
     if (selectedIndex > 0) {
       selectedIndex -= 1;
       updateSelection();
       scrollToSelected();
     }
-  } else if (e.key === "Enter") {
-    e.preventDefault();
+  } else if (event.key === "Enter") {
+    event.preventDefault();
     if (selectedIndex >= 0 && selectedIndex < historyItems.length) {
       pasteItem(historyItems[selectedIndex].id);
     }
@@ -285,9 +476,9 @@ window.addEventListener("keydown", (e) => {
 });
 
 function scrollToSelected() {
-  const selectedEl = clipboardList.children[selectedIndex];
-  if (selectedEl) {
-    selectedEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  const selectedElement = clipboardList.children[selectedIndex];
+  if (selectedElement) {
+    selectedElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 }
 
@@ -295,8 +486,14 @@ window.addEventListener("blur", () => {
   invoke("hide_window");
 });
 
-window.addEventListener("focus", () => {
-  closePreview();
+window.addEventListener("focus", async () => {
+  if (previewPanel.classList.contains("open")) {
+    const wasClosed = await closePreview();
+    if (!wasClosed) {
+      return;
+    }
+  }
+
   searchInput.focus();
   searchInput.select();
   selectedIndex = -1;

@@ -94,6 +94,22 @@ fn delete_item(state: tauri::State<db::DbState>, id: i64) -> Result<(), String> 
 }
 
 #[tauri::command]
+fn update_text_content(
+    state: tauri::State<db::DbState>,
+    id: i64,
+    content: String,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+
+    let item = db::get_item_by_id(&conn, id).map_err(|e| e.to_string())?;
+    if item.content_type != "text" {
+        return Err("Only text clipboard items can be edited".to_string());
+    }
+
+    db::update_item_content(&conn, id, &content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn hide_window(app: tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.hide();
@@ -266,6 +282,7 @@ pub fn run() {
             get_history,
             toggle_pin,
             delete_item,
+            update_text_content,
             paste_item,
             hide_window,
             get_image_data
