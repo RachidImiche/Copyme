@@ -6,7 +6,7 @@
   --border-color: rgba(255, 255, 255, 0.1);
   --item-hover: rgba(255, 255, 255, 0.05);
   --item-active: rgba(255, 255, 255, 0.1);
-  --accent: #5e6ad2;
+  --accent: #ffffff;
   --danger: #d25e5e;
   --pin-active: #d2a45e;
 }
@@ -26,6 +26,7 @@ body {
 }
 
 .container {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -130,6 +131,16 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover {
   pointer-events: none;
 }
 
+.image-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-badge {
+  font-size: 14px;
+}
+
 .item-actions {
   display: flex;
   gap: 8px;
@@ -153,6 +164,16 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover .item-actions,
   padding: 4px;
   border-radius: 4px;
   transition: all 0.2s;
+}
+
+body.is-pasting .clipboard-item,
+body.is-pasting .action-btn,
+body.is-pasting .btn-primary {
+  cursor: wait;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
 }
 
 .action-btn:hover {
@@ -233,6 +254,16 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover .item-actions,
   color: #fff;
 }
 
+#previewImage {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
 .preview-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -251,9 +282,9 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover .item-actions,
 }
 
 .btn-primary {
-  background-color: rgba(94, 106, 210, 0.2);
+  background-color: rgba(2, 29, 18, 0.466);
   color: var(--accent);
-  border: 1px solid rgba(94, 106, 210, 0.5);
+  
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -264,7 +295,7 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover .item-actions,
 }
 
 .btn-primary:hover {
-  background-color: rgba(94, 106, 210, 0.4);
+  background-color: rgba(69, 177, 54, 0.4);
   color: #fff;
 
 }

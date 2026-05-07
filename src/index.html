@@ -10,17 +10,19 @@
 
 <body>
   <div class="container">
-    <div class="search-bar">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" id="searchInput" placeholder="Search clipboard..." autocomplete="off" />
+    <div id="mainView" class="main-view">
+      <div class="search-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search clipboard..." autocomplete="off" />
+      </div>
+      <ul id="clipboardList" class="clipboard-list">
+        <!-- Items will be dynamically inserted here -->
+      </ul>
     </div>
-    <ul id="clipboardList" class="clipboard-list">
-      <!-- Items will be dynamically inserted here -->
-    </ul>
 
     <!-- Preview Panel -->
     <div id="previewPanel" class="preview-panel">
@@ -37,6 +39,7 @@
       </div>
       <div class="preview-content">
         <pre id="previewText"></pre>
+        <img id="previewImage" alt="Clipboard image preview" hidden />
       </div>
       <div class="preview-footer">
         <button id="previewPasteBtn" class="btn-primary">Paste</button>
