@@ -111,28 +111,28 @@ fn trigger_system_paste() -> Result<(), String> {
 
     use enigo::{Enigo, Key, Keyboard, Settings};
 
+    let paste_modifier = if cfg!(target_os = "macos") {
+        Key::Meta
+    } else {
+        Key::Control
+    };
+
     let mut last_err = String::new();
     for _ in 0..3 {
         match Enigo::new(&Settings::default()) {
             Ok(mut enigo) => {
                 enigo
-                    .key(Key::Control, enigo::Direction::Press)
+                    .key(paste_modifier, enigo::Direction::Press)
                     .map_err(|e| e.to_string())?;
                 thread::sleep(Duration::from_millis(8));
 
-                if let Err(v_err) = enigo.key(Key::V, enigo::Direction::Click) {
-                    enigo
-                        .key(Key::Unicode('v'), enigo::Direction::Click)
-                        .map_err(|fallback_err| {
-                            format!(
-                                "Failed to send paste key (V: {v_err}, fallback: {fallback_err})"
-                            )
-                        })?;
-                }
+                enigo
+                    .key(Key::Unicode('v'), enigo::Direction::Click)
+                    .map_err(|e| e.to_string())?;
 
                 thread::sleep(Duration::from_millis(8));
                 enigo
-                    .key(Key::Control, enigo::Direction::Release)
+                    .key(paste_modifier, enigo::Direction::Release)
                     .map_err(|e| e.to_string())?;
                 return Ok(());
             }
