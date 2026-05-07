@@ -17,8 +17,15 @@
   box-sizing: border-box;
 }
 
+html,
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: transparent;
   color: var(--text-main);
   overflow: hidden;
@@ -29,6 +36,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100vh;
   background-color: var(--bg-color);
   backdrop-filter: blur(12px);
@@ -44,12 +52,10 @@ body {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .main-view.slide-out {
-  transform: translateX(-30%);
-  opacity: 0.5;
+  display: none;
 }
 
 .search-bar {
@@ -117,7 +123,7 @@ body {
   background-color: var(--item-active);
 }
 
-body:not(.is-keyboard-navigating) .clipboard-item:hover {
+.clipboard-item.mouse-active {
   background-color: var(--item-hover);
 }
 
@@ -138,7 +144,15 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover {
 }
 
 .image-badge {
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.image-item-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .item-actions {
@@ -148,7 +162,7 @@ body:not(.is-keyboard-navigating) .clipboard-item:hover {
   transition: opacity 0.2s ease;
 }
 
-body:not(.is-keyboard-navigating) .clipboard-item:hover .item-actions,
+.clipboard-item.mouse-active .item-actions,
 .clipboard-item.focused .item-actions {
   opacity: 1;
 }
@@ -203,7 +217,7 @@ body.is-pasting .btn-primary {
 
 /* Preview Panel */
 .preview-panel {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   width: 100%;
@@ -213,13 +227,12 @@ body.is-pasting .btn-primary {
   -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translate3d(100%, 0, 0);
   z-index: 10;
 }
 
 .preview-panel.open {
-  transform: translateX(0);
+  transform: translate3d(0, 0, 0);
 }
 
 .preview-header {
@@ -243,10 +256,11 @@ body.is-pasting .btn-primary {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+  contain: layout paint;
 }
 
 .preview-content pre {
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 13px;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -262,6 +276,11 @@ body.is-pasting .btn-primary {
   height: auto;
   margin: 0 auto;
   object-fit: contain;
+  image-rendering: auto;
+}
+
+#previewImage[hidden] {
+  display: none;
 }
 
 .preview-content::-webkit-scrollbar {
@@ -282,22 +301,21 @@ body.is-pasting .btn-primary {
 }
 
 .btn-primary {
-  background-color: rgba(2, 29, 18, 0.466);
   color: var(--accent);
-  
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
-
 }
 
 .btn-primary:hover {
-  background-color: rgba(69, 177, 54, 0.4);
-  color: #fff;
-
+  background-color: rgba(54, 177, 130, 0.226);
+  color: #ffffffce;
 }
 
 .action-btn.preview-btn:hover {
